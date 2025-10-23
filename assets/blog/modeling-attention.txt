@@ -1,0 +1,8 @@
+Modeling Attention as a Design Material
+======================================
+
+Attention is a scarce yet pliable resource. Treating it as a design material requires us to understand how interfaces shape what users notice, ignore, and sustain over time.
+
+I outline three patterns. First, rhythm: interleaving bursts of guidance with deliberate pauses helps researchers sustain flow without drowning in nudges. Second, porosity: giving users frictionless control to let signals in or out at will protects their agency. Third, legibility: visual and linguistic affordances should expose why a system is asking for attention, not just that it needs it.
+
+The essay closes with a call to prototype tools that foreground attentional stewardship alongside functionality—interfaces that feel like collaborators rather than interruptions.
