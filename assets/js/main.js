@@ -1,74 +1,96 @@
-const blogEntries = [
-  {
-    title: "Modeling Attention as a Design Material",
-    dateISO: "2024-02-11",
-    displayDate: "February 11, 2024",
-    cta: "Read Essay",
-    asset: "assets/blog/modeling-attention.txt"
-  },
-  {
-    title: "Margins, Annotations, and the Quiet Politics of Notes",
-    dateISO: "2023-11-04",
-    displayDate: "November 4, 2023",
-    cta: "Read Prose",
-    asset: "assets/blog/margins-annotations.txt"
-  }
-];
+const THEME_STORAGE_KEY = "sz-theme-preference";
+const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
 
-const truncateExcerpt = (text, limit = 260) => {
-  const normalized = text.replace(/\r/g, "").split("\n\n").find((block) => block.trim().length) || text;
-  const clean = normalized.replace(/\s+/g, " ").trim();
-  if (clean.length <= limit) {
-    return clean;
-  }
-  const truncated = clean.slice(0, limit);
-  return `${truncated.replace(/[\s,;.:!-]*$/, "")}…`;
+let themePreference = "system";
+let themeToggleButton;
+
+const preferenceLabels = {
+  system: "Auto mode",
+  light: "Light mode",
+  dark: "Dark mode"
 };
 
-const loadBlogEntries = () => {
-  const list = document.getElementById("blog-list");
-  if (!list) {
+const resolveSystemTheme = () => (prefersDarkScheme.matches ? "dark" : "light");
+
+const updateToggleButton = () => {
+  if (!themeToggleButton) {
     return;
   }
 
-  blogEntries.forEach((entry) => {
-    const article = document.createElement("article");
-    article.className = "blog-card";
+  const label = preferenceLabels[themePreference] || preferenceLabels.system;
+  const mode = themePreference === "system" ? resolveSystemTheme() : themePreference;
 
-    article.innerHTML = `
-      <header>
-        <time datetime="${entry.dateISO}">${entry.displayDate}</time>
-        <h3>${entry.title}</h3>
-      </header>
-      <p class="blog-excerpt">Loading preview…</p>
-      <a class="card-link" href="${entry.asset}" target="_blank" rel="noopener">${entry.cta} →</a>
-    `;
+  themeToggleButton.setAttribute("data-theme-state", themePreference);
+  themeToggleButton.setAttribute("aria-label", `Theme: ${label}`);
+  themeToggleButton.setAttribute("aria-pressed", mode === "dark" ? "true" : "false");
 
-    list.appendChild(article);
-
-    const excerptEl = article.querySelector(".blog-excerpt");
-
-    fetch(entry.asset)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load ${entry.asset}`);
-        }
-        return response.text();
-      })
-      .then((text) => {
-        excerptEl.textContent = truncateExcerpt(text);
-      })
-      .catch(() => {
-        excerptEl.textContent = "Preview unavailable. Open the full text to read the post.";
-      });
-  });
+  const labelEl = themeToggleButton.querySelector(".theme-toggle__label");
+  if (labelEl) {
+    labelEl.textContent = label;
+  }
 };
 
+const applyThemePreference = (preference, {persist = true} = {}) => {
+  themePreference = preference;
+  const themeToApply = preference === "system" ? resolveSystemTheme() : preference;
+
+  document.documentElement.setAttribute("data-theme", themeToApply);
+  document.documentElement.dataset.themePreference = preference;
+
+  if (persist) {
+    if (preference === "system") {
+      localStorage.removeItem(THEME_STORAGE_KEY);
+    } else {
+      localStorage.setItem(THEME_STORAGE_KEY, preference);
+    }
+  }
+
+  updateToggleButton();
+};
+
+const cyclePreference = (current) => {
+  if (current === "system") {
+    return "dark";
+  }
+  if (current === "dark") {
+    return "light";
+  }
+  return "system";
+};
+
+const initThemePreference = () => {
+  try {
+    const storedPreference = localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedPreference === "light" || storedPreference === "dark") {
+      applyThemePreference(storedPreference, {persist: false});
+      return;
+    }
+  } catch (error) {
+    console.warn("Unable to access theme preference from storage.", error);
+  }
+  applyThemePreference("system", {persist: false});
+};
+
+prefersDarkScheme.addEventListener("change", () => {
+  if (themePreference === "system") {
+    applyThemePreference("system", {persist: false});
+  }
+});
+
+initThemePreference();
+
 document.addEventListener("DOMContentLoaded", () => {
+  themeToggleButton = document.querySelector("[data-theme-toggle]");
+  if (themeToggleButton) {
+    updateToggleButton();
+    themeToggleButton.addEventListener("click", () => {
+      const nextPreference = cyclePreference(themePreference);
+      applyThemePreference(nextPreference);
+    });
+  }
+
   const yearElement = document.getElementById("current-year");
   if (yearElement) {
     yearElement.textContent = new Date().getFullYear().toString();
   }
-
-  loadBlogEntries();
 });
