@@ -463,6 +463,10 @@ img {
   color: var(--text-secondary);
 }
 
+.feed-body p + p {
+  margin-top: 1.1rem;
+}
+
 .blog-list {
   display: grid;
   gap: 1.8rem;
