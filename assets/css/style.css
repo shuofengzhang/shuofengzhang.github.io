@@ -136,6 +136,21 @@ img {
   padding: 1.2rem 0;
 }
 
+.site-toolbar {
+  padding: 0.75rem 0 0;
+}
+
+.site-toolbar__inner {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .site-toolbar__inner {
+    justify-content: center;
+  }
+}
+
 .brand-name {
   font-weight: 600;
   font-size: 1.15rem;
